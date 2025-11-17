@@ -16,29 +16,47 @@ class AllWeather:
         self.transforms = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
 
     def get_loaders(self, parse_patches=True, validation='snow'):
-        if validation == 'raindrop':
-            print("=> evaluating raindrop test set...")
-            path = os.path.join(self.config.data.data_dir, 'data', 'raindrop', 'test')
-            filename = 'raindroptesta.txt'
-        elif validation == 'rainfog':
-            print("=> evaluating outdoor rain-fog test set...")
-            path = os.path.join(self.config.data.data_dir, 'data', 'outdoor-rain')
-            filename = 'test1.txt'
-        else:   # snow
-            print("=> evaluating snowtest100K-L...")
-            path = os.path.join(self.config.data.data_dir, 'data', 'snow100k')
-            filename = 'snowtest100k_L.txt'
+        # if validation == 'raindrop':
+        #     print("=> evaluating raindrop test set...")
+        #     path = os.path.join(self.config.data.data_dir, 'data', 'raindrop', 'test')
+        #     filename = 'raindroptesta.txt'
+        # elif validation == 'rainfog':
+        #     print("=> evaluating outdoor rain-fog test set...")
+        #     path = os.path.join(self.config.data.data_dir, 'data', 'outdoor-rain')
+        #     filename = 'test1.txt'
+        # else:   # snow
+        #     print("=> evaluating snowtest100K-L...")
+        #     path = os.path.join(self.config.data.data_dir, 'data', 'snow100k')
+        #     filename = 'snowtest100k_L.txt'
 
+        # train_dataset = AllWeatherDataset(os.path.join(self.config.data.data_dir, 'data', 'allweather'),
+        #                                   n=self.config.training.patch_n,
+        #                                   patch_size=self.config.data.image_size,
+        #                                   transforms=self.transforms,
+        #                                   filelist='allweather.txt',
+        #                                   parse_patches=parse_patches)
+        # val_dataset = AllWeatherDataset(path, n=self.config.training.patch_n,
+        #                                 patch_size=self.config.data.image_size,
+        #                                 transforms=self.transforms,
+        #                                 filelist=filename,
+        #                                 parse_patches=parse_patches)
+
+        # 1. 训练集加载 (保持不变，使用 allweather.txt)
         train_dataset = AllWeatherDataset(os.path.join(self.config.data.data_dir, 'data', 'allweather'),
                                           n=self.config.training.patch_n,
                                           patch_size=self.config.data.image_size,
                                           transforms=self.transforms,
                                           filelist='allweather.txt',
                                           parse_patches=parse_patches)
-        val_dataset = AllWeatherDataset(path, n=self.config.training.patch_n,
+
+        # 2. 验证集加载 (指向训练集列表作为占位符，跳过硬编码的测试集)
+        # 我们使用训练集的路径和列表文件来避免 FileNotFoundError
+        print("=> WARNING: Using training set list for validation data as a placeholder.")
+        val_dataset = AllWeatherDataset(os.path.join(self.config.data.data_dir, 'data', 'allweather'),
+                                        n=self.config.training.patch_n,
                                         patch_size=self.config.data.image_size,
                                         transforms=self.transforms,
-                                        filelist=filename,
+                                        filelist='allweather.txt',  # 使用您已创建的训练列表
                                         parse_patches=parse_patches)
 
         if not parse_patches:
@@ -63,8 +81,10 @@ class AllWeatherDataset(torch.utils.data.Dataset):
         train_list = os.path.join(dir, filelist)
         with open(train_list) as f:
             contents = f.readlines()
-            input_names = [i.strip() for i in contents]
-            gt_names = [i.strip().replace('input', 'gt') for i in input_names]
+
+            # 【关键修改】：读取 Input 和 GT 两列
+            input_names = [i.strip().split(' ')[0] for i in contents]
+            gt_names = [i.strip().split(' ')[1] for i in contents]
 
         self.input_names = input_names
         self.gt_names = gt_names

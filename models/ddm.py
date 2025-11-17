@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.utils.data as data
 import torch.backends.cudnn as cudnn
 import utils
-from models.unet import DiffusionUNet
+from .unet import DiffusionUNet
 
 
 # This script is adapted from the following repositories
