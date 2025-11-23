@@ -49,16 +49,45 @@ class AllWeather:
                                           filelist='allweather.txt',
                                           parse_patches=parse_patches)
 
-        # 2. 验证集加载 (指向训练集列表作为占位符，跳过硬编码的测试集)
-        validation_dir = os.path.join(self.config.data.data_dir,'data','allweather')
-        validation_filelist = 'validation.txt'
-        print(f"=> 加载自定义验证集列表:{validation_filelist}")
-        val_dataset = AllWeatherDataset(validation_dir,n=self.config.training.patch_n,
+        # 2. 确定验证/测试集的路径和文件列表
+
+        if parse_patches or validation != 'custom_test':
+            # 默认：用于训练时的验证集或旧的预设测试集
+            validation_dir = os.path.join(self.config.data.data_dir, 'data', 'allweather')
+            validation_filelist = 'validation.txt'
+            print(f"=> 加载默认验证集列表:{validation_filelist}")
+
+        elif not parse_patches and validation == 'custom_test':
+            print("--------------------------------------------------")
+            print("=> 检测到测试阶段，加载自定义测试集...")
+
+            # 1. 找到当前脚本所在目录 (datasets/)
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+
+            # 2. 向上退一级到项目根目录 (..)
+            project_root = os.path.dirname(current_dir)
+
+            # 3. 构造新的绝对路径：从项目根目录进入 data/custom_data/test/image
+            # 目标路径: [Project_Root] / data / custom_data / test / image
+            validation_dir = os.path.join(project_root, 'data', 'custom_data', 'test', 'image')
+            validation_filelist = 'test_list.txt'
+
+            print(f"✅ 启用自定义测试集路径: {validation_dir}")
+            print(f"✅ 使用文件列表: {validation_filelist}")
+            print("--------------------------------------------------")
+        else:
+            # 确保所有路径都有默认处理，例如兼容原有的 snow/raindrop 逻辑
+            # 这里使用 snow 作为 fallback，但这取决于您项目中被注释掉的代码
+            validation_dir = os.path.join(self.config.data.data_dir, 'data', 'snow100k')
+            validation_filelist = 'snowtest100k_L.txt'
+
+        # 3. 统一实例化 val_dataset (只执行一次)
+        val_dataset = AllWeatherDataset(validation_dir,
+                                        n=self.config.training.patch_n,
                                         patch_size=self.config.data.image_size,
                                         transforms=self.transforms,
                                         filelist=validation_filelist,
                                         parse_patches=parse_patches)
-
 
         if not parse_patches:
             self.config.training.batch_size = 1
