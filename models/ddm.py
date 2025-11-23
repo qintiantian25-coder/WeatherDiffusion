@@ -90,10 +90,17 @@ def get_beta_schedule(beta_schedule, *, beta_start, beta_end, num_diffusion_time
     return betas
 
 
-def noise_estimation_loss(model, x0, t, e, b):
+def noise_estimation_loss(model, x_input, t, e, b):
+    # 假设前 3 个通道是条件图像 x_cond (例如：雨天/雾霾图像)
+    x_cond = x_input[:, :3, :, :]
+    # 假设后 3 个通道是目标图像 x_target (例如：干净图像)
+    x_target = x_input[:, 3:, :, :]
     a = (1-b).cumprod(dim=0).index_select(0, t).view(-1, 1, 1, 1)
-    x = x0[:, 3:, :, :] * a.sqrt() + e * (1.0 - a).sqrt()
-    output = model(torch.cat([x0[:, :3, :, :], x], dim=1), t.float())
+    # 根据 DDPM 公式，对目标图像 x_target 添加噪声
+    x_noisy = x_target * a.sqrt() + e * (1.0 - a).sqrt()
+    # x = x0[:, 3:, :, :] * a.sqrt() + e * (1.0 - a).sqrt()
+    # output = model(torch.cat([x0[:, :3, :, :], x], dim=1), t.float())
+    output = model(torch.cat([x_cond, x_noisy], dim=1), t.float())
     return (e - output).square().sum(dim=(1, 2, 3)).mean(dim=0)
 
 
@@ -155,7 +162,8 @@ class DenoisingDiffusion(object):
 
                 x = x.to(self.device)
                 x = data_transform(x)
-                e = torch.randn_like(x[:, 3:, :, :])
+                # e = torch.randn_like(x[:, 3:, :, :])
+                e = torch.randn(n, 3, self.config.data.image_size, self.config.data.image_size, device=self.device)
                 b = self.betas
 
                 # antithetic sampling
