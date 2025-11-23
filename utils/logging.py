@@ -2,6 +2,7 @@ import torch
 import shutil
 import os
 import torchvision.utils as tvu
+import argparse
 
 
 def save_image(img, file_directory):
@@ -20,4 +21,5 @@ def load_checkpoint(path, device):
     if device is None:
         return torch.load(path)
     else:
-        return torch.load(path, map_location=device)
+        return torch.load(path, weights_only=False)
+
