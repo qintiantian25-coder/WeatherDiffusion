@@ -50,14 +50,15 @@ class AllWeather:
                                           parse_patches=parse_patches)
 
         # 2. 验证集加载 (指向训练集列表作为占位符，跳过硬编码的测试集)
-        # 我们使用训练集的路径和列表文件来避免 FileNotFoundError
-        print("=> WARNING: Using training set list for validation data as a placeholder.")
-        val_dataset = AllWeatherDataset(os.path.join(self.config.data.data_dir, 'data', 'allweather'),
-                                        n=self.config.training.patch_n,
+        validation_dir = os.path.join(self.config.data.data_dir,'data','allweather')
+        validation_filelist = 'validation.txt'
+        print(f"=> 加载自定义验证集列表:{validation_filelist}")
+        val_dataset = AllWeatherDataset(validation_dir,n=self.config.training.patch_n,
                                         patch_size=self.config.data.image_size,
                                         transforms=self.transforms,
-                                        filelist='allweather.txt',  # 使用您已创建的训练列表
+                                        filelist=validation_filelist,
                                         parse_patches=parse_patches)
+
 
         if not parse_patches:
             self.config.training.batch_size = 1
