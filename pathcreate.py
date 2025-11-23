@@ -6,9 +6,9 @@ data_root_dir = 'data'
 # 您的图像数据所在子文件夹名
 custom_data_folder = 'custom_data'
 # 列表文件要放置的目录和文件名
-list_file_path = os.path.join(data_root_dir, 'allweather', 'allweather.txt')
+list_file_path = os.path.join(data_root_dir, 'allweather', 'validation.txt')
 # 包含训练数据的子目录
-training_sub_dir = 'train'
+training_sub_dir = 'val'
 
 # 构造图像输入文件夹的绝对路径，用于读取文件名
 input_images_path = os.path.join(os.getcwd(), data_root_dir, custom_data_folder, training_sub_dir, 'image')
