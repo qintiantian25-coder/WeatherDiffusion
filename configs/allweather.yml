@@ -3,7 +3,7 @@ data:
     image_size: 64
     channels: 3
     num_workers: 32
-    data_dir: "."
+    data_dir: "E:/qtt/mangyuan/WeatherDiffusion/"
     conditional: True
 
 model:
